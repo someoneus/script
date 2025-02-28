@@ -5,11 +5,8 @@ local function distortName(str, percentage)
     local length = #str
     local numToShuffle = math.max(1, math.floor(length * percentage))  
 
-    local indexes = {}
-    while #indexes < numToShuffle do
     local letters = {}  
     local positions = {}  
-
     for i = 1, length do
         table.insert(letters, str:sub(i, i))
         table.insert(positions, i)
@@ -18,42 +15,26 @@ local function distortName(str, percentage)
     local shuffleIndexes = {}
     while #shuffleIndexes < numToShuffle do
         local randIndex = math.random(1, length)
-        if not table.find(indexes, randIndex) then
-            table.insert(indexes, randIndex)
         if not table.find(shuffleIndexes, randIndex) then
             table.insert(shuffleIndexes, randIndex)
         end
     end
 
     local selectedChars = {}
-    for _, i in ipairs(indexes) do
-        table.insert(selectedChars, str:sub(i, i))
     for _, i in ipairs(shuffleIndexes) do
         table.insert(selectedChars, letters[i])
     end
+
     for i = #selectedChars, 2, -1 do
         local j = math.random(1, i)
         selectedChars[i], selectedChars[j] = selectedChars[j], selectedChars[i]
     end
 
-    local newName = {}
-    local shuffleIndex = 1
-    for i = 1, length do
-        if table.find(indexes, i) then
-            table.insert(newName, selectedChars[shuffleIndex])
-            shuffleIndex = shuffleIndex + 1
-        else
-            table.insert(newName, str:sub(i, i))
-        end
     for index, i in ipairs(shuffleIndexes) do
         letters[i] = selectedChars[index]
     end
 
-    local distortedName = table.concat(newName)
     local finalName = {}
-
-    for i = 1, #distortedName do
-        table.insert(finalName, distortedName:sub(i, i))
     for i = 1, #letters do
         table.insert(finalName, letters[i])
         if math.random() < 0.3 then  
@@ -68,15 +49,14 @@ local name = distortName(player.Name, 0.2)
 
 StarterGui:SetCore("SendNotification", {
     Title = "Executed!"; 
-    Text = "Script Hub was Injected/Exeuted Succsesfully"; 
+    Text = "Script Hub was Injected/Executed Successfully"; 
     Icon = "rbxassetid://126104158730275";  
     Duration = 5;  
     Button1 = "OK";
     Callback = function()
-        print("script hub injected")
+        print("Script Hub Injected")
     end
 })
-
 
 
 
