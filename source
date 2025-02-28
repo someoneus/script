@@ -215,7 +215,7 @@ player.CharacterAdded:Connect(updateCharacter)
 Section:NewTextBox("Lag Intensity", "Set how choppy the lag is", function(txt)
     local num = tonumber(txt)
     if num then
-        lagIntensity = math.max(num, 1)  
+        lagIntensity = math.max(1, num)  
     end
 end)
 
@@ -227,7 +227,7 @@ Section:NewToggle("Fake Lag", "Simulates extreme choppy lag", function(state)
         task.spawn(function()
             while isLagging do
                 if humanoid and rootPart then
-                    local freezeChance = math.min(lagIntensity * 0.1, 0.95)  
+                    local freezeChance = math.min(lagIntensity * 0.1, 0.65)  
                     local freezeTime = math.random(0.05, 0.3) * lagIntensity  
                     local unfreezeTime = math.random(0.03, 0.15) * (11 - lagIntensity)
 
@@ -251,7 +251,7 @@ Section:NewToggle("Fake Lag", "Simulates extreme choppy lag", function(state)
                         task.wait(freezeTime)  
                         rootPart.Anchored = false  
                     else
-                        humanoid.WalkSpeed = math.random(2, 20)  
+                        humanoid.WalkSpeed = math.random(3, 20)  
                     end
 
                     task.wait(unfreezeTime)  
