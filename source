@@ -43,8 +43,12 @@ StarterGui:SetCore("SendNotification", {
 
 
 -- Hub
+if displayName == nil then
+    displayName = "Display_Not_Found"
+end
+
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Hello, ["..displayName.." | @"..name.."] | 1.1.0", "Serpent")
+local Window = Library.CreateLib("Hello, ["..displayName.." | @"..name.."] | 1.1.4", "Serpent")
 
 local Tab = Window:NewTab("Built-in")
 local Section = Tab:NewSection("cool stuff here")
@@ -194,46 +198,73 @@ local humanoid = character:FindFirstChildOfClass("Humanoid")
 local rootPart = character:FindFirstChild("HumanoidRootPart")
 
 local isLagging = false  
-local lagIntensity = 5  -- Default lag intensity
+local lagIntensity = 5  
+local lastPosition = nil  
 
+-- Function to update character references on respawn
+local function updateCharacter(newCharacter)
+    character = newCharacter
+    humanoid = character:FindFirstChildOfClass("Humanoid")
+    rootPart = character:FindFirstChild("HumanoidRootPart")
+    lastPosition = rootPart.Position  -- Reset position tracking
+end
+
+player.CharacterAdded:Connect(updateCharacter)
+
+-- Lag Intensity Textbox
 Section:NewTextBox("Lag Intensity", "Set how choppy the lag is", function(txt)
     local num = tonumber(txt)
     if num then
-        lagIntensity = math.max(num, 1)  -- Ensure it's at least 1
+        lagIntensity = math.max(num, 1)  
     end
 end)
 
-Section:NewToggle("Fake Lag", "Simulates fake lag by making movement jittery and stuttery", function(state)
+-- Fake Lag Toggle
+Section:NewToggle("Fake Lag", "Simulates extreme choppy lag", function(state)
     isLagging = state  
 
     if isLagging then
         task.spawn(function()
             while isLagging do
                 if humanoid and rootPart then
-                    local freezeChance = math.min(lagIntensity * 0.1, 0.9)  -- Higher intensity increases freeze chance
-                    local freezeTime = math.random(0.1, 0.5) * lagIntensity  
-                    local unfreezeTime = math.random(0.05, 0.2) * (11 - lagIntensity)
+                    local freezeChance = math.min(lagIntensity * 0.1, 0.95)  
+                    local freezeTime = math.random(0.05, 0.3) * lagIntensity  
+                    local unfreezeTime = math.random(0.03, 0.15) * (11 - lagIntensity)
 
+                    -- **Check if Player Has Moved Even Slightly**
+                    local currentPosition = rootPart.Position
+                    if lastPosition and (currentPosition - lastPosition).Magnitude > 0.2 then  -- Detect even small movements
+                        if math.random() < 0.2 then  -- 20% chance to teleport
+                            local safeOffset = Vector3.new(
+                                math.random(-1, 1),  
+                                math.random(0, 1),  
+                                math.random(-1, 1)  
+                            )
+                            rootPart.CFrame = rootPart.CFrame + safeOffset
+                        end
+                    end
+                    lastPosition = rootPart.Position  
+
+                    -- Simulate random lag spikes
                     if math.random() < freezeChance then
-                        rootPart.Anchored = true  -- Freeze movement but keep animations playing
-                        task.wait(freezeTime)  -- Freeze duration
-                        rootPart.Anchored = false  -- Restore movement
+                        rootPart.Anchored = true  
+                        task.wait(freezeTime)  
+                        rootPart.Anchored = false  
                     else
-                        humanoid.WalkSpeed = math.random(4, 16)  -- Jittery movement
+                        humanoid.WalkSpeed = math.random(2, 20)  
                     end
 
-                    task.wait(unfreezeTime)  -- Delay before next effect
+                    task.wait(unfreezeTime)  
                 end
             end
         end)
     else
         if humanoid and rootPart then
-            humanoid.WalkSpeed = 16  -- Restore normal movement
-            rootPart.Anchored = false  -- Ensure the character is not stuck
+            humanoid.WalkSpeed = 16  
+            rootPart.Anchored = false  
         end
     end
 end)
-
 
 local Section = Tab:NewSection("Misc")
 
