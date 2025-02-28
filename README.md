@@ -1,7 +1,7 @@
 # script hub
 roblox script hub i made
 
-all this scripts are not mine
+all these scripts are not mine
 
 credit to xHeptc for the library
 
