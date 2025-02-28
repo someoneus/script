@@ -234,10 +234,10 @@ Section:NewToggle("Fake Lag", "Simulates extreme choppy lag", function(state)
                     -- **Check if Player Has Moved Even Slightly**
                     local currentPosition = rootPart.Position
                     if lastPosition and (currentPosition - lastPosition).Magnitude > 0.2 then  -- Detect even small movements
-                        if math.random() < 0.2 then  -- 20% chance to teleport
+                        if math.random() < 0.1 then  -- 10% chance to teleport
                             local safeOffset = Vector3.new(
                                 math.random(-1, 1),  
-                                math.random(0, 1),  
+                                math.random(0, 0),  
                                 math.random(-1, 1)  
                             )
                             rootPart.CFrame = rootPart.CFrame + safeOffset
