@@ -1,34 +1,28 @@
 local player = game.Players.LocalPlayer
 
 local function distortName(str)
+    local replacements = {o = "0", O = "0", l = "i", L = "I", e = "3", E = "3", s = "5", S = "5", a = "4", A = "4"}  
+
     local finalName = {}
 
     for i = 1, #str do
         local char = str:sub(i, i)
 
-        -- Replace letters with symbols
-        if char == "o" or char == "O" then
-            char = "0"
-        elseif char == "i" or char == "I" then
-            char = "!"
-        elseif char == "s" or char == "S" then
-            char = "$"
+        -- Replace letters with chaotic counterparts
+        if replacements[char] then
+            char = replacements[char]
         end
 
         table.insert(finalName, char)
-
-        -- Randomly insert special characters (/, \, ., or ')
-        if math.random() < 0.3 then  
-            local specialChars = {"/", "\\", ".", "'"}
-            table.insert(finalName, specialChars[math.random(1, #specialChars)])
-        end
-    end
+    end  -- Fixed misplaced 'end'
 
     return table.concat(finalName)
 end
 
-local displayName = distortName(player.Character.Humanoid.DisplayName)
-local name = distortName(player.Name)
+
+    local displayName = distortName(player.Character.Humanoid.DisplayName)
+    local name = distortName(player.Name)
+
 local StarterGui = game.StarterGui
 
 StarterGui:SetCore("SendNotification", {
@@ -50,7 +44,7 @@ StarterGui:SetCore("SendNotification", {
 
 -- Hub
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Hello, ["..displayName.." | @"..name.."] | 1.0.6", "Serpent")
+local Window = Library.CreateLib("Hello, ["..displayName.." | @"..name.."] | 1.1.0", "Serpent")
 
 local Tab = Window:NewTab("Built-in")
 local Section = Tab:NewSection("cool stuff here")
@@ -171,10 +165,79 @@ Section:NewToggle("Tweaking", "Are you okay?", function(state)
     end
 end)
 
+local flingpower = 50  -- Default fling power
+
+Section:NewTextBox("Fling Power", "Set how strong the fling is", function(txt)
+    flingpower = tonumber(txt) or flingpower
+end)
+
+Section:NewButton("Fling Yourself", "Launch yourself forward!", function()
+    local character = player.Character
+    if character then
+        local root = character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character:FindFirstChild("Humanoid")
+
+        if root and humanoid then
+            humanoid.PlatformStand = true
+            local forwardDirection = root.CFrame.LookVector * flingpower
+            root.Velocity = forwardDirection + Vector3.new(0, flingpower / 2, 0)  -- Adds upward force too
+            task.wait(0.5)
+            humanoid.PlatformStand = false
+            
+        end
+    end
+end)
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:FindFirstChildOfClass("Humanoid")
+local rootPart = character:FindFirstChild("HumanoidRootPart")
+
+local isLagging = false  
+local lagIntensity = 5  -- Default lag intensity
+
+Section:NewTextBox("Lag Intensity", "Set how choppy the lag is", function(txt)
+    local num = tonumber(txt)
+    if num then
+        lagIntensity = math.max(num, 1)  -- Ensure it's at least 1
+    end
+end)
+
+Section:NewToggle("Fake Lag", "Simulates fake lag by making movement jittery and stuttery", function(state)
+    isLagging = state  
+
+    if isLagging then
+        task.spawn(function()
+            while isLagging do
+                if humanoid and rootPart then
+                    local freezeChance = math.min(lagIntensity * 0.1, 0.9)  -- Higher intensity increases freeze chance
+                    local freezeTime = math.random(0.1, 0.5) * lagIntensity  
+                    local unfreezeTime = math.random(0.05, 0.2) * (11 - lagIntensity)
+
+                    if math.random() < freezeChance then
+                        rootPart.Anchored = true  -- Freeze movement but keep animations playing
+                        task.wait(freezeTime)  -- Freeze duration
+                        rootPart.Anchored = false  -- Restore movement
+                    else
+                        humanoid.WalkSpeed = math.random(4, 16)  -- Jittery movement
+                    end
+
+                    task.wait(unfreezeTime)  -- Delay before next effect
+                end
+            end
+        end)
+    else
+        if humanoid and rootPart then
+            humanoid.WalkSpeed = 16  -- Restore normal movement
+            rootPart.Anchored = false  -- Ensure the character is not stuck
+        end
+    end
+end)
+
 
 local Section = Tab:NewSection("Misc")
 
-Section:NewTextBox("Lua Executor", "Enter code to execute", function(txt)
+Section:NewTextBox("Lua Executor", "can execute your scripts", function(txt)
     local success, err = pcall(function()
         loadstring(txt)()
     end)
@@ -205,22 +268,26 @@ Section:NewTextBox("custom images", "rarely works :/", function(txt)
     })
 end)
 
-Section:NewButton("Server Uptime", "Check how long the server has been running", function()
-    local serverTime = workspace.DistributedGameTime  -- Get server uptime in seconds
+local StarterGui = game:GetService("StarterGui")
+local player = game.Players.LocalPlayer
 
-    local days = math.floor(serverTime / 86400)  -- 86400 seconds in a day
-    local hours = math.floor((serverTime % 86400) / 3600)  -- 3600 seconds in an hour
-    local minutes = math.floor((serverTime % 3600) / 60)  -- 60 seconds in a minute
+Section:NewButton("Time Elapsed", "Check how long you've been playing", function()
+    local elapsedTime = game.workspace.DistributedGameTime
 
-    local message = string.format("Server Uptime: %d days, %d hours, %d minutes", days, hours, minutes)
+    local hours = math.floor(elapsedTime / 3600)  -- 3600 seconds in an hour
+    local minutes = math.floor((elapsedTime % 3600) / 60)  -- 60 seconds in a minute
+    local seconds = math.floor(elapsedTime % 60)  -- Get remaining seconds
+
+    local timedata = string.format("%d hours, %d minutes, %d seconds", hours, minutes, seconds)
 
     StarterGui:SetCore("SendNotification", {
-        Title = "Server Uptime"; 
-        Text = message; 
+        Title = "Time Elapsed"; 
+        Text = timedata; 
         Duration = 10;  
         Button1 = "OK";
     })
 end)
+
 
 
 local Tab = Window:NewTab("universal")
