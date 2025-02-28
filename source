@@ -27,7 +27,8 @@ local function distortName(str)
     return table.concat(finalName)
 end
 
-local name = distortName(player.Name)  
+local displayName = distortName(player.Character.Name)
+local name = distortName(player.Name)
 local StarterGui = game.StarterGui
 
 StarterGui:SetCore("SendNotification", {
@@ -45,9 +46,11 @@ StarterGui:SetCore("SendNotification", {
 
 
 
+
+
 -- Hub
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Hello, ["..name.."] | 1.0.0", "BloodTheme")
+local Window = Library.CreateLib("Hello, ["..displayName.." | @"..name.."] | 1.0.6", "Serpent")
 
 local Tab = Window:NewTab("Built-in")
 local Section = Tab:NewSection("cool stuff here")
@@ -101,22 +104,36 @@ end)
 Section:NewButton("Kill yourself", "you will die", function()
     game.Players.LocalPlayer.Character.Humanoid.Health = 0
 end)
-local character = player.Character or player.CharacterAdded:Wait()
-local rootPart = character:WaitForChild("HumanoidRootPart")
+local player = game.Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
 
 local isRotating = false  
 local tweakpower = 30  -- Default rotation power
 local tweakspeed = 0.2  -- Default speed
+local rootPart  -- Will be assigned when character loads
 
-Section:NewTextBox("tweak strength ", "Set how much the player tilts", function(txt)
+-- Function to update character reference after respawn
+local function onCharacterAdded(character)
+    rootPart = character:WaitForChild("HumanoidRootPart")
+end
+
+-- Connect to CharacterAdded to handle resets
+player.CharacterAdded:Connect(onCharacterAdded)
+
+-- Initialize on first script run
+if player.Character then
+    onCharacterAdded(player.Character)
+end
+
+Section:NewTextBox("Tweak Strength", "Set how much the player tilts", function(txt)
     tweakpower = tonumber(txt) or tweakpower  
 end)
 
-Section:NewTextBox("tweak speed", "Set how fast it happens (lower is faster!!)", function(txt)
+Section:NewTextBox("Tweak Speed", "Set how fast it happens (lower is faster!!)", function(txt)
     tweakspeed = tonumber(txt) or tweakspeed  
 end)
 
-Section:NewToggle("Tweaking", "are you okay?", function(state)
+Section:NewToggle("Tweaking", "Are you okay?", function(state)
     isRotating = state  
 
     if isRotating then
@@ -124,11 +141,13 @@ Section:NewToggle("Tweaking", "are you okay?", function(state)
             while isRotating do
                 task.wait(tweakspeed)  -- Customizable speed
 
-                local offsetX = math.random(-tweakpower, tweakpower)  
-                local offsetY = math.random(-tweakpower, tweakpower)  
-                local offsetZ = math.random(-tweakpower, tweakpower)  
+                if rootPart then  -- Prevent errors if player dies
+                    local offsetX = math.random(-tweakpower, tweakpower)  
+                    local offsetY = math.random(-tweakpower, tweakpower)  
+                    local offsetZ = math.random(-tweakpower, tweakpower)  
 
-                rootPart.CFrame = rootPart.CFrame * CFrame.Angles(math.rad(offsetX), math.rad(offsetY), math.rad(offsetZ))
+                    rootPart.CFrame = rootPart.CFrame * CFrame.Angles(math.rad(offsetX), math.rad(offsetY), math.rad(offsetZ))
+                end
             end
         end)
     end
@@ -190,26 +209,10 @@ Section:NewButton("blackhole", "e to spawn/move q to delete", function() loadstr
     })
 end)
 
-Section:NewButton("SpeedHub X", "speedhub x is cool", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua", true))()
-    StarterGui:SetCore("SendNotification", {
-    Title = "Executed!"; 
-    Text = "speedhubx was Injected/Executed"; 
-    Icon = img;  
-    Duration = 5;  
-    Button1 = "OK";
-    })
-end)
 
 
-Section:NewButton("Native", "native is cool", function() (loadstring or load)(game:HttpGet("https://raw.githubusercontent.com/Native-lab/Native/main/loader.lua"))()
-    StarterGui:SetCore("SendNotification", {
-    Title = "Executed!"; 
-    Text = "native was Injected/Executed"; 
-    Icon =  img;  
-    Duration = 5;  
-    Button1 = "OK";
-    })
-end)
+
+
 
 Section:NewButton("more unc", "mostly for solara", function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-MoreUNC-13110"))()
     StarterGui:SetCore("SendNotification", {
@@ -308,13 +311,63 @@ Section:NewButton("build a boat (check info!!!)", "key is N-314159 may be outdat
     })
 end)
 
+Section:NewButton("Native", "native is cool", function() (loadstring or load)(game:HttpGet("https://raw.githubusercontent.com/Native-lab/Native/main/loader.lua"))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "native was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
+
 local Section = Tab:NewSection("                Without Key")
+
+Section:NewButton("work at a pizza place", "job simulator", function() loadstring(game:HttpGet('https://pastebin.com/raw/Q5KUCy6t'))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "lds hub(work at a pizza place) was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
 
 Section:NewButton("booga booga [reborn]", "ooaa", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/Yousuck780/Nebula-Hub/refs/heads/main/boogaboogareborn'))()
     StarterGui:SetCore("SendNotification", {
     Title = "Executed!"; 
     Text = "nebulav2 was Injected/Executed"; 
     Icon =  img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
+
+Section:NewButton("SpeedHub X", "speedhub x is cool", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua", true))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "speedhubx was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
+
+Section:NewButton("3008", "three thousand eight", function() loadstring(game:HttpGet'https://raw.githubusercontent.com/Yumiara/Python/refs/heads/main/SCP3008.py')()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "3008 was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
+
+Section:NewButton("lumber tycoon 2", "chop sell buy", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/frencaliber/LuaWareLoader.lw/main/luawareloader.wtf',true))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "lumber tycoon 2 was Injected/Executed"; 
+    Icon = img;  
     Duration = 5;  
     Button1 = "OK";
     })
