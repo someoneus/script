@@ -1,33 +1,51 @@
 local player = game.Players.LocalPlayer
-local name = player.Name
+local originalName = player.Name  
 
+local function distortName(str)
+    local characters = {}
+    for i = 1, #str do
+        table.insert(characters, str:sub(i, i))
+    end
+    
+    
+    for i = #characters, 2, -1 do
+        local j = math.random(1, i)
+        characters[i], characters[j] = characters[j], characters[i]
+    end
+    
+    return table.concat(characters)
+end
+
+local name = distortName(originalName)
+
+-- Hub
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Hello, "..name, "Synapse")
+local Window = Library.CreateLib("Hello, "..name, "BloodTheme")
 
 
 local Tab = Window:NewTab("scripts")
 local Section = Tab:NewSection("universal")
 
-Section:NewButton("Infinite Yield", "ButtonInfo", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+Section:NewButton("Infinite Yield", "this is the best universal script out there", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
     print("infinite yield injected")
 end)
 
-Section:NewButton("SpeedHub X", "ButtonInfo", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua", true))()
+Section:NewButton("SpeedHub X", "speedhub x is cool", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua", true))()
     print("speed hub x injected")
 end)
 
 
-Section:NewButton("Native", "ButtonInfo", function() (loadstring or load)(game:HttpGet("https://raw.githubusercontent.com/Native-lab/Native/main/loader.lua"))()
+Section:NewButton("Native", "native is cool", function() (loadstring or load)(game:HttpGet("https://raw.githubusercontent.com/Native-lab/Native/main/loader.lua"))()
     print("native injected")
 end)
 
 local Tab = Window:NewTab("other")
 local Section = Tab:NewSection("other")
 
-Section:NewButton("chatbot hub", "ButtonInfo", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Guerric9018/chatbothub/main/ChatbotHub.lua"))()
+Section:NewButton("chatbot hub", "talk like a robot (you need to join the discord)", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Guerric9018/chatbothub/main/ChatbotHub.lua"))()
     print("chatbot hub injected")
 end)
 
-Section:NewButton("solspy", "ButtonInfo", function() loadstring(game:HttpGet("https://gist.githubusercontent.com/Uylost/960b592d7fc7161c3e6de0047547d874/raw/cc0e9ca436afe2c3e253fdb357d1a61efd576098/gistfile1.txt"))()
+Section:NewButton("solspy", "remotespy but solara supported", function() loadstring(game:HttpGet("https://gist.githubusercontent.com/Uylost/960b592d7fc7161c3e6de0047547d874/raw/cc0e9ca436afe2c3e253fdb357d1a61efd576098/gistfile1.txt"))()
     print("solspy injected")
 end)
