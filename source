@@ -205,6 +205,23 @@ Section:NewTextBox("custom images", "rarely works :/", function(txt)
     })
 end)
 
+Section:NewButton("Server Age", "Send how long the server age", function()
+    local serverTime = tick() - workspace.DistributedGameTime  -- Get server uptime in seconds
+
+    local days = math.floor(serverTime / 86400)  -- 86400 seconds in a day
+    local hours = math.floor((serverTime % 86400) / 3600)  -- 3600 seconds in an hour
+    local minutes = math.floor((serverTime % 3600) / 60)  -- 60 seconds in a minute
+
+    local message = string.format("Server Age: %d days, %d hours, %d minutes", days, hours, minutes)
+
+    StarterGui:SetCore("SendNotification", {
+        Title = "Server Age"; 
+        Text = message; 
+        Duration = 10;  
+    })
+end)
+
+
 local Tab = Window:NewTab("universal")
 local Section = Tab:NewSection("universal")
 
