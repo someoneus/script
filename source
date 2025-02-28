@@ -27,7 +27,7 @@ local function distortName(str)
     return table.concat(finalName)
 end
 
-local displayName = distortName(player.Character.Name)
+local displayName = distortName(player.Character.Humanoid.DisplayName)
 local name = distortName(player.Name)
 local StarterGui = game.StarterGui
 
@@ -104,17 +104,21 @@ end)
 Section:NewButton("Kill yourself", "you will die", function()
     game.Players.LocalPlayer.Character.Humanoid.Health = 0
 end)
+
 local player = game.Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
 local isRotating = false  
+local isPlatformStand = false  -- New toggle variable
 local tweakpower = 30  -- Default rotation power
 local tweakspeed = 0.2  -- Default speed
-local rootPart  -- Will be assigned when character loads
+local rootPart  
+local humanoid  
 
 -- Function to update character reference after respawn
 local function onCharacterAdded(character)
     rootPart = character:WaitForChild("HumanoidRootPart")
+    humanoid = character:FindFirstChildOfClass("Humanoid")  -- Get Humanoid
 end
 
 -- Connect to CharacterAdded to handle resets
@@ -133,8 +137,20 @@ Section:NewTextBox("Tweak Speed", "Set how fast it happens (lower is faster!!)",
     tweakspeed = tonumber(txt) or tweakspeed  
 end)
 
+Section:NewToggle("Paralyzed", "Make player Paralyzed while tweaking", function(state)
+    isPlatformStand = state  
+
+    if humanoid then
+        humanoid.PlatformStand = isPlatformStand and isRotating  -- Apply only if tweaking is active
+    end
+end)
+
 Section:NewToggle("Tweaking", "Are you okay?", function(state)
     isRotating = state  
+
+    if humanoid and isPlatformStand then
+        humanoid.PlatformStand = isRotating  -- Set PlatformStand if enabled
+    end
 
     if isRotating then
         task.spawn(function()
@@ -150,8 +166,11 @@ Section:NewToggle("Tweaking", "Are you okay?", function(state)
                 end
             end
         end)
+    elseif humanoid and isPlatformStand then
+        humanoid.PlatformStand = false  -- Reset PlatformStand when tweaking stops
     end
 end)
+
 
 local Section = Tab:NewSection("Misc")
 
