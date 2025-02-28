@@ -5,39 +5,38 @@ local function distortName(str, percentage)
     local length = #str
     local numToShuffle = math.max(1, math.floor(length * percentage))  
 
-    local indexes = {}
-    while #indexes < numToShuffle do
+    local letters = {}  
+    local positions = {}  
+
+    for i = 1, length do
+        table.insert(letters, str:sub(i, i))
+        table.insert(positions, i)
+    end
+
+    local shuffleIndexes = {}
+    while #shuffleIndexes < numToShuffle do
         local randIndex = math.random(1, length)
-        if not table.find(indexes, randIndex) then
-            table.insert(indexes, randIndex)
+        if not table.find(shuffleIndexes, randIndex) then
+            table.insert(shuffleIndexes, randIndex)
         end
     end
 
     local selectedChars = {}
-    for _, i in ipairs(indexes) do
-        table.insert(selectedChars, str:sub(i, i))
+    for _, i in ipairs(shuffleIndexes) do
+        table.insert(selectedChars, letters[i])
     end
     for i = #selectedChars, 2, -1 do
         local j = math.random(1, i)
         selectedChars[i], selectedChars[j] = selectedChars[j], selectedChars[i]
     end
 
-    local newName = {}
-    local shuffleIndex = 1
-    for i = 1, length do
-        if table.find(indexes, i) then
-            table.insert(newName, selectedChars[shuffleIndex])
-            shuffleIndex = shuffleIndex + 1
-        else
-            table.insert(newName, str:sub(i, i))
-        end
+    for index, i in ipairs(shuffleIndexes) do
+        letters[i] = selectedChars[index]
     end
 
-    local distortedName = table.concat(newName)
     local finalName = {}
-
-    for i = 1, #distortedName do
-        table.insert(finalName, distortedName:sub(i, i))
+    for i = 1, #letters do
+        table.insert(finalName, letters[i])
         if math.random() < 0.3 then  
             table.insert(finalName, math.random() < 0.5 and "/" or "\\")
         end
@@ -60,12 +59,46 @@ StarterGui:SetCore("SendNotification", {
 })
 
 
+
+
+
+
 -- Hub
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("Hello, ["..name.."]", "BloodTheme")
 
+local Tab = Window:NewTab("Built-in")
+Section:NewLabel("The built-in tab has cool stuff")
+local funspeed = 0.1
+Section:NewSlider("fun number speed", "the speed of fun number", 60, 0.1, function(s) -- 60 (MaxValue) | 0.1 (MinValue)
+    funspeed = s
+end)
 
-local Tab = Window:NewTab("scripts")
+Section:NewLabel("0")
+
+local isGenerating = false  
+Section:NewToggle("Fun Number", "Randomly generates numbers 1 to the power of 10", function(state)
+    isGenerating = state  
+
+    if isGenerating then
+        print("Fun number started")
+
+        task.spawn(function()
+            local exponent = 0
+            while isGenerating do
+                local num = math.pow(10, exponent)
+                exponent = exponent + 1  
+                task.wait(funspeed)  
+                label:UpdateLabel(num)
+            end
+        end)
+
+    else
+        print("Fun number stopped")
+    end
+end)
+
+local Tab = Window:NewTab("universal")
 local Section = Tab:NewSection("universal")
 
 Section:NewButton("Infinite Yield", "this is the best universal script out there", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
