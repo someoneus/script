@@ -1,49 +1,34 @@
 local player = game.Players.LocalPlayer
 
-local function distortName(str, percentage)
-    local length = #str
-    local numToShuffle = math.max(1, math.floor(length * percentage))  
-
-    local letters = {}  
-    for i = 1, length do
-        table.insert(letters, str:sub(i, i))
-    end
-
-    local shuffleIndexes = {}
-    while #shuffleIndexes < numToShuffle do
-        local randIndex = math.random(1, length)
-        if not table.find(shuffleIndexes, randIndex) then
-            table.insert(shuffleIndexes, randIndex)
-        end
-    end
-
-    local selectedChars = {}
-    for _, i in ipairs(shuffleIndexes) do
-        table.insert(selectedChars, letters[i])
-    end
-
-    for i = #selectedChars, 2, -1 do
-        local j = math.random(1, i)
-        selectedChars[i], selectedChars[j] = selectedChars[j], selectedChars[i]  -- Shuffle selected letters
-    end
-
-    for index, i in ipairs(shuffleIndexes) do
-        letters[i] = selectedChars[index]
-    end
-
+local function distortName(str)
     local finalName = {}
-    for i = 1, #letters do
-        table.insert(finalName, letters[i])
+
+    for i = 1, #str do
+        local char = str:sub(i, i)
+
+        -- Replace letters with symbols
+        if char == "o" or char == "O" then
+            char = "0"
+        elseif char == "i" or char == "I" then
+            char = "!"
+        elseif char == "s" or char == "S" then
+            char = "$"
+        end
+
+        table.insert(finalName, char)
+
+        -- Randomly insert special characters (/, \, ., or ')
         if math.random() < 0.3 then  
-            table.insert(finalName, math.random() < 0.5 and "/" or "\\")  
+            local specialChars = {"/", "\\", ".", "'"}
+            table.insert(finalName, specialChars[math.random(1, #specialChars)])
         end
     end
 
     return table.concat(finalName)
 end
 
-local name = distortName(player.Name, 0.2)  -- Shuffles 20% of the name
-
+local name = distortName(player.Name)  
+local StarterGui = game.StarterGui
 
 StarterGui:SetCore("SendNotification", {
     Title = "Executed!"; 
@@ -62,21 +47,23 @@ StarterGui:SetCore("SendNotification", {
 
 -- Hub
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Hello, ["..name.."]", "BloodTheme")
+local Window = Library.CreateLib("Hello, ["..name.."] | 1.0.0", "BloodTheme")
 
 local Tab = Window:NewTab("Built-in")
 local Section = Tab:NewSection("cool stuff here")
-Section:NewLabel("RNG")
+Section:NewLabel("RNG   (make sure you press enter)")
 
 local rngmin = 1
 local rngmax = 10
 
 Section:NewTextBox("Minimum", "Set the RNG minimum", function(txt)
     rngmin = tonumber(txt) or rngmin  
+    if rngmin < 0 then rngmin = 0 end  -- Ensure rngmin is at least 0
 end)
 
 Section:NewTextBox("Maximum", "Set the RNG maximum", function(txt)
     rngmax = tonumber(txt) or rngmax  
+    if rngmax > 1000000 then rngmax = 1000000 end  -- Ensure rngmax does not exceed 1,000,000
 end)
 
 Section:NewButton("RNG", "Activates the RNG", function()
@@ -95,7 +82,7 @@ Section:NewButton("RNG", "Activates the RNG", function()
     StarterGui:SetCore("SendNotification", {
         Title = tostring(randomNumber); 
         Text = "Your number is:"; 
-        Icon = "rbxassetid://126104158730275";  
+        Icon = img;  
         Duration = 10;  
         Button1 = "OK";
         Callback = function()
@@ -104,58 +91,231 @@ Section:NewButton("RNG", "Activates the RNG", function()
     })
 end)
 
+local Section = Tab:NewSection("             Character")
+Section:NewSlider("WalkSpeed", "you already know it", 500, 0, function(s) -- 500 (MaxValue) | 0 (MinValue)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = s
+end)
+Section:NewButton("Reset WalkSpeed", "you already know it", function()
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+end)
+Section:NewButton("Kill yourself", "you will die", function()
+    game.Players.LocalPlayer.Character.Humanoid.Health = 0
+end)
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
 
+local isRotating = false  
+local tweakpower = 30  -- Default rotation power
+local tweakspeed = 0.2  -- Default speed
 
+Section:NewTextBox("tweak strength ", "Set how much the player tilts", function(txt)
+    tweakpower = tonumber(txt) or tweakpower  
+end)
+
+Section:NewTextBox("tweak speed", "Set how fast it happens (lower is faster!!)", function(txt)
+    tweakspeed = tonumber(txt) or tweakspeed  
+end)
+
+Section:NewToggle("Tweaking", "are you okay?", function(state)
+    isRotating = state  
+
+    if isRotating then
+        task.spawn(function()
+            while isRotating do
+                task.wait(tweakspeed)  -- Customizable speed
+
+                local offsetX = math.random(-tweakpower, tweakpower)  
+                local offsetY = math.random(-tweakpower, tweakpower)  
+                local offsetZ = math.random(-tweakpower, tweakpower)  
+
+                rootPart.CFrame = rootPart.CFrame * CFrame.Angles(math.rad(offsetX), math.rad(offsetY), math.rad(offsetZ))
+            end
+        end)
+    end
+end)
+
+local Section = Tab:NewSection("Misc")
+
+Section:NewTextBox("Lua Executor", "Enter code to execute", function(txt)
+    local success, err = pcall(function()
+        loadstring(txt)()
+    end)
+
+    if not success then
+        StarterGui:SetCore("SendNotification", {
+            Title = "Execution Error"; 
+            Text = err;  -- Avoid long error messages
+            Icon = "rbxassetid://126104158730275";  
+            Duration = 5;  
+            Button1 = "OK";
+        })
+        
+        warn("Execution Error: " .. err)  -- Print full error in console
+    end
+end)  -- << Closing parenthesis was missing here!
+
+local img = "4632517063"
+
+Section:NewTextBox("custom images", "rarely works :/", function(txt)
+    img = "rbxassetid://" .. txt
+    StarterGui:SetCore("SendNotification", {
+    Title = "ID Sent"; 
+    Text = img; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
 
 local Tab = Window:NewTab("universal")
 local Section = Tab:NewSection("universal")
 
 Section:NewButton("Infinite Yield", "this is the best universal script out there", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-    print("infinite yield injected")
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "Infinite Yield was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
+
+Section:NewButton("blackhole", "e to spawn/move q to delete", function() loadstring(game:HttpGet("https://pastebin.com/raw/tstrtDFD"))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "blackhole was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
 end)
 
 Section:NewButton("SpeedHub X", "speedhub x is cool", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua", true))()
-    print("speed hub x injected")
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "speedhubx was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
 end)
 
 
 Section:NewButton("Native", "native is cool", function() (loadstring or load)(game:HttpGet("https://raw.githubusercontent.com/Native-lab/Native/main/loader.lua"))()
-    print("native injected")
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "native was Injected/Executed"; 
+    Icon =  img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
 end)
 
 Section:NewButton("more unc", "mostly for solara", function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-MoreUNC-13110"))()
-    print("more unc injected")
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "more unc was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
 end)
 
+Section:NewButton("automatic chat bypass", "holy crap this thing fucking work", function() loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/Synergy-Networks/products/main/BetterBypasser/loader.lua"))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "chatbypass was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
+
+
+Section:NewButton("c00lware", "am very cool", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/thatonestupidkid1/COOLKID-WARE/main/obfuscation"))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "c00l ware was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
+
+Section:NewButton("project cmdbar", ";radio", function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-projectCMDBAR-16747"))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "project cmdbar was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
 local Tab = Window:NewTab("other")
 local Section = Tab:NewSection("other")
 
 Section:NewButton("chatbot hub", "talk like a robot (you need to join the discord)", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Guerric9018/chatbothub/main/ChatbotHub.lua"))()
-    print("chatbot hub injected")
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "chatbot was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
 end)
 
 Section:NewButton("solspy", "remotespy but solara supported", function() loadstring(game:HttpGet("https://gist.githubusercontent.com/Uylost/960b592d7fc7161c3e6de0047547d874/raw/cc0e9ca436afe2c3e253fdb357d1a61efd576098/gistfile1.txt"))()
-    print("solspy injected")
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "solspy was Injected/Executed"; 
+    Icon =  img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
 end)
 
 Section:NewButton("micro backdoor", "backdoor scanner", function() loadstring(game:HttpGet("https://paste.ee/r/GipgWZb8"))()
-    print("microbackdoor injected")
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "microbackdoor was Injected/Executed"; 
+    Icon =  img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
 end)
 
 Section:NewButton("lalol backdoor", "lalol lalol", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/Its-LALOL/LALOL-Hub/main/Backdoor-Scanner/script'))()
-    print("lalolbackdoor injected")
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "lalol backdoor was Injected/Executed"; 
+    Icon =  img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
 end)
 
 
 local Tab = Window:NewTab("Main")
-local Section = Tab:NewSection("With Key")
+local Section = Tab:NewSection("                With Key")
 
-Section:NewButton("build a boat", "build your imagination", function() loadstring(game:HttpGet("https://rawscripts.net/raw/Build-A-Boat-For-Treasure-NovBot-Revmp-17896"))()
-    print("novbot(build a boat) injected")
+Section:NewButton("build a boat (check info!!!)", "key is N-314159 may be outdated", function() loadstring(game:HttpGet("https://rawscripts.net/raw/Build-A-Boat-For-Treasure-NovBot-Revmp-17896"))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "novbot was Injected/Executed"; 
+    Icon =  img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
 end)
 
-local Section = Tab:NewSection("Without Key")
+local Section = Tab:NewSection("                Without Key")
 
 Section:NewButton("booga booga [reborn]", "ooaa", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/Yousuck780/Nebula-Hub/refs/heads/main/boogaboogareborn'))()
-    print("nebulav2(booga booga) injected")
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "nebulav2 was Injected/Executed"; 
+    Icon =  img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
 end)
