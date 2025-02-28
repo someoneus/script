@@ -89,10 +89,6 @@ local Window = Library.CreateLib("Hello, ["..name.."]", "BloodTheme")
 local Tab = Window:NewTab("Built-in")
 local Section = Tab:NewSection("Built-in")
 Section:NewLabel("The built-in tab has cool stuff")
-local funspeed = 0.1
-Section:NewSlider("fun number speed", "the speed of fun number", 60, 0.1, function(s) -- 60 (MaxValue) | 0.1 (MinValue)
-    funspeed = s
-end)
 
 Section:NewLabel("0")
 
@@ -118,7 +114,6 @@ Section:NewToggle("Fun Number", "Randomly generates numbers 1 to the power of 10
     end
 end)
 
-local Tab = Window:NewTab("scripts")
 local Tab = Window:NewTab("universal")
 local Section = Tab:NewSection("universal")
 
