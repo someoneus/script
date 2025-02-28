@@ -33,7 +33,7 @@ local StarterGui = game.StarterGui
 
 StarterGui:SetCore("SendNotification", {
     Title = "Executed!"; 
-    Text = "Script Hub was Injected/Executed"; 
+    Text = "Please wait for the GUI"; 
     Icon = "rbxassetid://126104158730275";  
     Duration = 5;  
     Button1 = "OK";
@@ -205,19 +205,20 @@ Section:NewTextBox("custom images", "rarely works :/", function(txt)
     })
 end)
 
-Section:NewButton("Server Age", "Send how long the server age", function()
-    local serverTime = tick() - workspace.DistributedGameTime  -- Get server uptime in seconds
+Section:NewButton("Server Uptime", "Check how long the server has been running", function()
+    local serverTime = workspace.DistributedGameTime  -- Get server uptime in seconds
 
     local days = math.floor(serverTime / 86400)  -- 86400 seconds in a day
     local hours = math.floor((serverTime % 86400) / 3600)  -- 3600 seconds in an hour
     local minutes = math.floor((serverTime % 3600) / 60)  -- 60 seconds in a minute
 
-    local message = string.format("Server Age: %d days, %d hours, %d minutes", days, hours, minutes)
+    local message = string.format("Server Uptime: %d days, %d hours, %d minutes", days, hours, minutes)
 
     StarterGui:SetCore("SendNotification", {
-        Title = "Server Age"; 
+        Title = "Server Uptime"; 
         Text = message; 
         Duration = 10;  
+        Button1 = "OK";
     })
 end)
 
