@@ -68,35 +68,28 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHept
 local Window = Library.CreateLib("Hello, ["..name.."]", "BloodTheme")
 
 local Tab = Window:NewTab("Built-in")
-Section:NewLabel("The built-in tab has cool stuff")
-local funspeed = 0.1
-Section:NewSlider("fun number speed", "the speed of fun number", 60, 0.1, function(s) -- 60 (MaxValue) | 0.1 (MinValue)
-    funspeed = s
-end)
 
-Section:NewLabel("0")
+Section:NewLabel("The built-in tab has cool stuff")
 
 local isGenerating = false  
+local num = 0  -- Stores the generated number
+Section:NewLabel(num)
 Section:NewToggle("Fun Number", "Randomly generates numbers 1 to the power of 10", function(state)
     isGenerating = state  
 
     if isGenerating then
-        print("Fun number started")
-
         task.spawn(function()
             local exponent = 0
             while isGenerating do
-                local num = math.pow(10, exponent)
+                num = math.pow(10, exponent)  -- Save generated number
                 exponent = exponent + 1  
-                task.wait(funspeed)  
                 label:UpdateLabel(num)
+                task.wait(1)  
             end
         end)
-
-    else
-        print("Fun number stopped")
     end
 end)
+
 
 local Tab = Window:NewTab("universal")
 local Section = Tab:NewSection("universal")
