@@ -65,27 +65,46 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHept
 local Window = Library.CreateLib("Hello, ["..name.."]", "BloodTheme")
 
 local Tab = Window:NewTab("Built-in")
-local Section = Tab:NewSection("Built-in")
-Section:NewLabel("The built-in tab has cool stuff")
+local Section = Tab:NewSection("cool stuff here")
+Section:NewLabel("RNG")
 
-Section:NewLabel("0")
+local rngmin = 1
+local rngmax = 10
 
-local isGenerating = false  
-Section:NewToggle("Fun Number", "Randomly generates numbers 1 to the power of 10", function(state)
-    isGenerating = state  
-
-    if isGenerating then
-        task.spawn(function()
-            local exponent = 0
-            while isGenerating do
-                local num = math.pow(10, exponent) -- Generate number
-                exponent = exponent + 1  
-                task.wait(0.5)  
-                label:UpdateLabel(tostring(num)) -- Convert `num` to string
-            end
-        end)
-    end
+Section:NewTextBox("Minimum", "Set the RNG minimum", function(txt)
+    rngmin = tonumber(txt) or rngmin  
 end)
+
+Section:NewTextBox("Maximum", "Set the RNG maximum", function(txt)
+    rngmax = tonumber(txt) or rngmax  
+end)
+
+Section:NewButton("RNG", "Activates the RNG", function()
+    if rngmin > rngmax then
+        StarterGui:SetCore("SendNotification", {
+            Title = "Error"; 
+            Text = "Minimum cannot be greater than Maximum!"; 
+            Duration = 5;  
+            Button1 = "OK";
+        })
+        return
+    end
+
+    local randomNumber = math.random(rngmin, rngmax)
+
+    StarterGui:SetCore("SendNotification", {
+        Title = tostring(randomNumber); 
+        Text = "Your number is:"; 
+        Icon = "rbxassetid://126104158730275";  
+        Duration = 10;  
+        Button1 = "OK";
+        Callback = function()
+            print("RNG activated")
+        end
+    })
+end)
+
+
 
 
 local Tab = Window:NewTab("universal")
