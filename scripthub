@@ -1,5 +1,5 @@
 local player = game.Players.LocalPlayer
-local originalName = player.Name  
+local StarterGui = game:GetService("StarterGui")
 
 local function distortName(str, percentage)
     local length = #str
@@ -46,7 +46,18 @@ local function distortName(str, percentage)
     return table.concat(finalName)
 end
 
-local name = distortName(originalName, 0.2)  
+local name = distortName(player.Name, 0.2)  
+
+StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "Script Hub was Injected/Exeuted Succsesfully"; 
+    Icon = "rbxassetid://126104158730275";  
+    Duration = 5;  
+    Button1 = "OK";
+    Callback = function()
+        print("script hub injected")
+    end
+})
 
 
 -- Hub
@@ -68,6 +79,10 @@ end)
 
 Section:NewButton("Native", "native is cool", function() (loadstring or load)(game:HttpGet("https://raw.githubusercontent.com/Native-lab/Native/main/loader.lua"))()
     print("native injected")
+end)
+
+Section:NewButton("more unc", "mostly for solara", function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-MoreUNC-13110"))()
+    print("more unc injected")
 end)
 
 local Tab = Window:NewTab("other")
@@ -95,4 +110,10 @@ local Section = Tab:NewSection("With Key")
 
 Section:NewButton("build a boat", "build your imagination", function() loadstring(game:HttpGet("https://rawscripts.net/raw/Build-A-Boat-For-Treasure-NovBot-Revmp-17896"))()
     print("novbot(build a boat) injected")
+end)
+
+local Section = Tab:NewSection("Without Key")
+
+Section:NewButton("booga booga [reborn]", "ooaa", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/Yousuck780/Nebula-Hub/refs/heads/main/boogaboogareborn'))()
+    print("nebulav2(booga booga) injected")
 end)
