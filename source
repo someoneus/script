@@ -33,7 +33,7 @@ local color = {
     ElementColor = Color3.fromRGB(25, 150, 25)
 }
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Hello, [ "..displayName.." | @"..name.." ] | 1.2.0", color)
+local Window = Library.CreateLib("Hello, [ "..displayName.." | @"..name.." ] | 1.3.3", color)
 
 local Tab = Window:NewTab("Built-in")
 local Section = Tab:NewSection("cool stuff here")
@@ -264,6 +264,14 @@ Section:NewTextBox("Lua Executor", "can execute your scripts", function(txt)
             Duration = 5;  
             Button1 = "OK";
         })
+        StarterGui:SetCore("SendNotification", {
+            Title = "Execution Error"; 
+            Text = "Check console for more info";  -- Avoid long error messages
+            Icon = nil;  
+            Duration = 5;  
+            Button1 = "OK";
+        })
+
         
         warn("[cool hub script] Execution Error: " .. err)  -- Print full error in console
     end
@@ -416,18 +424,66 @@ Players.PlayerRemoving:Connect(function(player)
     RemoveTracer(player)
 end)
 
-Section:NewToggle("Player Tracer", "Toggles tracers for players", function(state)
-    TracerEnabled = state
+Section:NewToggle("Player Tracer", "Toggles tracers for players only", function(state)
     if state then
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer then
-                CreateTracer(player)
+                CreateTracer(player, true)
             end
         end
-        RunService:BindToRenderStep("UpdateTracers", Enum.RenderPriority.Camera.Value, UpdateTracers)
+        RunService:BindToRenderStep("UpdatePlayerTracers", Enum.RenderPriority.Camera.Value, function()
+    for target, line in pairs(Tracers) do
+        if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = target.Character.HumanoidRootPart
+            local distance = (Camera.CFrame.Position - rootPart.Position).Magnitude
+            local rootPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+            local head = target.Character:FindFirstChild("Head")
+            local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+            if onScreen then
+                -- Color transitions from Green (close) to Red (far)
+                local greenValue = math.clamp(255 - (distance * 2), 0, 255)
+                local tracerColor = Color3.fromRGB(255 - greenValue, greenValue, 0)
+
+
+                line.Color = tracerColor
+                line.From = screenCenter
+                line.To = Vector2.new(rootPos.X, rootPos.Y)
+                line.Visible = true
+
+                -- Label for player
+                if head then
+                    local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.5, 0))
+                    local label = Labels[target]
+                    if headOnScreen and label then
+                        local scale = math.clamp(20 - (distance / 15), 10, 20) -- Adjust text size
+                        label.Size = scale
+                        label.Position = Vector2.new(headPos.X, headPos.Y)
+                        label.Text = string.format("%s\n%.1f studs", target.Name, distance)
+                        label.Color = tracerColor
+                        label.OutlineColor = Color3.fromRGB(0, 0, 0)
+                        label.Visible = true
+                    else
+                        label.Visible = false
+                    end
+                end
+            else
+                line.Visible = false
+                if Labels[target] then
+                    Labels[target].Visible = false
+                end
+            end
+        else
+            RemoveTracer(target, true)
+        end
+    end
+end)
+
     else
-        RunService:UnbindFromRenderStep("UpdateTracers")
-        ResetTracers()
+        RunService:UnbindFromRenderStep("UpdatePlayerTracers")
+        for target in pairs(Tracers) do
+            RemoveTracer(target, true)
+        end
     end
 end)
 
@@ -457,34 +513,26 @@ local HumanoidTracers = {}
 local HumanoidLabels = {}
 local DetectionRadius = 100
 
-local function CreateTracer(target, isPlayer)
-    if IgnorePlayers and isPlayer then return end
-    
+local function CreateTracer(target)
+    -- Check if the humanoid belongs to a player
+    if game.Players:GetPlayerFromCharacter(target.Parent) then return end  
+
     local line = Drawing.new("Line")
     line.Thickness = 2
     line.Transparency = 1
     line.Visible = false
-    
-    if isPlayer then
-        Tracers[target] = line
-        local label = Drawing.new("Text")
-        label.Size = 16
-        label.Center = true
-        label.Outline = true
-        label.OutlineColor = Color3.fromRGB(0, 0, 0)
-        label.Visible = false
-        Labels[target] = label
-    else
-        HumanoidTracers[target] = line
-        local label = Drawing.new("Text")
-        label.Size = 16
-        label.Center = true
-        label.Outline = true
-        label.OutlineColor = Color3.fromRGB(0, 0, 0)
-        label.Visible = false
-        HumanoidLabels[target] = label
-    end
+
+    HumanoidTracers[target] = line
+    local label = Drawing.new("Text")
+    label.Size = 16
+    label.Center = true
+    label.Outline = true
+    label.OutlineColor = Color3.fromRGB(0, 0, 0)
+    label.Visible = false
+    HumanoidLabels[target] = label
 end
+
+
 
 local function RemoveTracer(target, isPlayer)
     if isPlayer then
@@ -542,16 +590,17 @@ local function UpdateTracers()
                         local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.5, 0))
                         local label = HumanoidLabels[target]
                         if headOnScreen and label then
-                            local scale = math.clamp(16 - (distance / 10), 8, 16)
-                            label.Size = scale
-                            label.Position = Vector2.new(headPos.X, headPos.Y)
-                            label.Text = string.format("%s\n%.1f studs", target.Parent.Name, distance)
-                            label.Color = tracerColor
-                            label.OutlineColor = Color3.fromRGB(0, 0, 0)
-                            label.Visible = true
+                         local scale = math.clamp(20 - (distance / 15), 10, 20) -- Adjust size dynamically
+                          label.Size = scale
+                          label.Position = Vector2.new(headPos.X, headPos.Y)
+                          label.Text = string.format("%s\n%.1f studs", target.Parent.Name, distance)
+                          label.Color = tracerColor
+                          label.OutlineColor = Color3.fromRGB(0, 0, 0)
+                          label.Visible = true
                         else
-                            label.Visible = false
-                        end
+                         label.Visible = false
+end
+
                     end
                 else
                     line.Visible = false
@@ -581,17 +630,13 @@ Players.PlayerRemoving:Connect(function(player)
     RemoveTracer(player, true)
 end)
 
-Section:NewToggle("Humanoid Tracer", "Toggles tracers for players and humanoids", function(state)
+Section:NewToggle("Humanoid Tracer", "Toggles tracers for NPCs only", function(state)
     TracerEnabled = state
     if state then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                CreateTracer(player, true)
-            end
-        end
+        -- Create tracers for only NPC humanoids
         for _, humanoid in pairs(workspace:GetDescendants()) do
-            if humanoid:IsA("Humanoid") and humanoid.Parent ~= LocalPlayer.Character then
-                CreateTracer(humanoid, false)
+            if humanoid:IsA("Humanoid") and not game.Players:GetPlayerFromCharacter(humanoid.Parent) then
+                CreateTracer(humanoid)
             end
         end
         RunService:BindToRenderStep("UpdateTracers", Enum.RenderPriority.Camera.Value, UpdateTracers)
@@ -601,23 +646,7 @@ Section:NewToggle("Humanoid Tracer", "Toggles tracers for players and humanoids"
     end
 end)
 
-Section:NewToggle("Ignore Players", "Ignores player humanoids from being traced", function(state)
-    IgnorePlayers = state
-    
-    if IgnorePlayers then
-        -- Remove all existing player tracers
-        for player, _ in pairs(Tracers) do
-            RemoveTracer(player, true)
-        end
-    else
-        -- Re-add player tracers when disabled
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                CreateTracer(player, true)
-            end
-        end
-    end
-end)
+
 
 Section:NewTextBox("Detection Radius", "Set the detection radius for humanoid tracing", function(txt)
     local radius = tonumber(txt)
@@ -638,6 +667,7 @@ workspace.DescendantAdded:Connect(function(descendant)
         end)
     end
 end)
+
 
 
 local Tab = Window:NewTab("universal")
