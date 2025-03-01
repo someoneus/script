@@ -315,21 +315,38 @@ local Camera = workspace.CurrentCamera
 local Tracers = {}
 local Labels = {}
 
-local function CreateTracer(target)
+local function CreateTracer(target, isPlayer)
+    if IgnorePlayers and isPlayer then 
+        RemoveTracer(target, true) -- Remove any existing tracers for players
+        return 
+    end
+    
     local line = Drawing.new("Line")
     line.Thickness = 2
     line.Transparency = 1
     line.Visible = false
     
-    Tracers[target] = line
-    local label = Drawing.new("Text")
-    label.Size = 16
-    label.Center = true
-    label.Outline = true
-    label.OutlineColor = Color3.fromRGB(0, 0, 0)
-    label.Visible = false
-    Labels[target] = label
+    if isPlayer then
+        Tracers[target] = line
+        local label = Drawing.new("Text")
+        label.Size = 16
+        label.Center = true
+        label.Outline = true
+        label.OutlineColor = Color3.fromRGB(0, 0, 0)
+        label.Visible = false
+        Labels[target] = label
+    else
+        HumanoidTracers[target] = line
+        local label = Drawing.new("Text")
+        label.Size = 16
+        label.Center = true
+        label.Outline = true
+        label.OutlineColor = Color3.fromRGB(0, 0, 0)
+        label.Visible = false
+        HumanoidLabels[target] = label
+    end
 end
+
 
 local function RemoveTracer(target)
     if Tracers[target] then
@@ -586,6 +603,20 @@ end)
 
 Section:NewToggle("Ignore Players", "Ignores player humanoids from being traced", function(state)
     IgnorePlayers = state
+    
+    if IgnorePlayers then
+        -- Remove all existing player tracers
+        for player, _ in pairs(Tracers) do
+            RemoveTracer(player, true)
+        end
+    else
+        -- Re-add player tracers when disabled
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                CreateTracer(player, true)
+            end
+        end
+    end
 end)
 
 Section:NewTextBox("Detection Radius", "Set the detection radius for humanoid tracing", function(txt)
