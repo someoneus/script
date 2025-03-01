@@ -1,5 +1,5 @@
-# script hub
-roblox script hub i made
+# cool 
+cool script hub
 
 please keep in note that i do not own any of the scripts in this hub (except for the built in tab)
 
