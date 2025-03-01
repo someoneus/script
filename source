@@ -303,6 +303,311 @@ Section:NewButton("Time Played (on server)", "Check how long you've been playing
 
 end)
 
+Section:UpdateSection("Visuals")
+
+Section:NewLabel("Tracers")
+local TracerEnabled = false
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local Tracers = {}
+local Labels = {}
+
+local function CreateTracer(target)
+    local line = Drawing.new("Line")
+    line.Thickness = 2
+    line.Transparency = 1
+    line.Visible = false
+    
+    Tracers[target] = line
+    local label = Drawing.new("Text")
+    label.Size = 16
+    label.Center = true
+    label.Outline = true
+    label.OutlineColor = Color3.fromRGB(0, 0, 0)
+    label.Visible = false
+    Labels[target] = label
+end
+
+local function RemoveTracer(target)
+    if Tracers[target] then
+        Tracers[target]:Remove()
+        Tracers[target] = nil
+    end
+    if Labels[target] then
+        Labels[target]:Remove()
+        Labels[target] = nil
+    end
+end
+
+local function ResetTracers()
+    for target in pairs(Tracers) do
+        RemoveTracer(target)
+    end
+end
+
+local function UpdateTracers()
+    if not TracerEnabled then return end
+    
+    for target, line in pairs(Tracers) do
+        if target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = target.Character.HumanoidRootPart
+            local distance = (Camera.CFrame.Position - rootPart.Position).Magnitude
+            local rootPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+            local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            
+            if onScreen then
+                local greenValue = math.clamp(255 - (distance * 2), 0, 255)
+                local tracerColor = Color3.fromRGB(255 - greenValue, greenValue, 0)
+                
+                line.Color = tracerColor
+                line.From = screenCenter
+                line.To = Vector2.new(rootPos.X, rootPos.Y)
+                line.Visible = true
+                
+                local label = Labels[target]
+                if label then
+                    local scale = math.clamp(16 - (distance / 10), 8, 16)
+                    label.Size = scale
+                    label.Position = Vector2.new(rootPos.X, rootPos.Y - 20)
+                    label.Text = string.format("%s\n%.1f studs", target.Name, distance)
+                    label.Color = tracerColor
+                    label.OutlineColor = Color3.fromRGB(0, 0, 0)
+                    label.Visible = true
+                end
+            else
+                line.Visible = false
+                if Labels[target] then
+                    Labels[target].Visible = false
+                end
+            end
+        else
+            RemoveTracer(target)
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if TracerEnabled then
+        CreateTracer(player)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    RemoveTracer(player)
+end)
+
+Section:NewToggle("Player Tracer", "Toggles tracers for players", function(state)
+    TracerEnabled = state
+    if state then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                CreateTracer(player)
+            end
+        end
+        RunService:BindToRenderStep("UpdateTracers", Enum.RenderPriority.Camera.Value, UpdateTracers)
+    else
+        RunService:UnbindFromRenderStep("UpdateTracers")
+        ResetTracers()
+    end
+end)
+
+
+
+
+
+
+
+
+
+
+
+Section:NewLabel("Humanoid Tracer")
+
+local TracerEnabled = false
+local IgnorePlayers = false
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Workspace = game:GetService("Workspace")
+
+local Tracers = {}
+local Labels = {}
+local HumanoidTracers = {}
+local HumanoidLabels = {}
+local DetectionRadius = 100
+
+local function CreateTracer(target, isPlayer)
+    if IgnorePlayers and isPlayer then return end
+    
+    local line = Drawing.new("Line")
+    line.Thickness = 2
+    line.Transparency = 1
+    line.Visible = false
+    
+    if isPlayer then
+        Tracers[target] = line
+        local label = Drawing.new("Text")
+        label.Size = 16
+        label.Center = true
+        label.Outline = true
+        label.OutlineColor = Color3.fromRGB(0, 0, 0)
+        label.Visible = false
+        Labels[target] = label
+    else
+        HumanoidTracers[target] = line
+        local label = Drawing.new("Text")
+        label.Size = 16
+        label.Center = true
+        label.Outline = true
+        label.OutlineColor = Color3.fromRGB(0, 0, 0)
+        label.Visible = false
+        HumanoidLabels[target] = label
+    end
+end
+
+local function RemoveTracer(target, isPlayer)
+    if isPlayer then
+        if Tracers[target] then
+            Tracers[target]:Remove()
+            Tracers[target] = nil
+        end
+        if Labels[target] then
+            Labels[target]:Remove()
+            Labels[target] = nil
+        end
+    else
+        if HumanoidTracers[target] then
+            HumanoidTracers[target]:Remove()
+            HumanoidTracers[target] = nil
+        end
+        if HumanoidLabels[target] then
+            HumanoidLabels[target]:Remove()
+            HumanoidLabels[target] = nil
+        end
+    end
+end
+
+local function ResetTracers()
+    for target in pairs(Tracers) do
+        RemoveTracer(target, true)
+    end
+    for target in pairs(HumanoidTracers) do
+        RemoveTracer(target, false)
+    end
+end
+
+local function UpdateTracers()
+    if not TracerEnabled then return end
+    
+    for target, line in pairs(HumanoidTracers) do
+        if target.Parent and target.Parent:FindFirstChild("HumanoidRootPart") then
+            local rootPart = target.Parent.HumanoidRootPart
+            local distance = (Camera.CFrame.Position - rootPart.Position).Magnitude
+            if distance <= DetectionRadius then
+                local rootPos, onScreen = Camera:WorldToViewportPoint(rootPart.Position)
+                local head = target.Parent:FindFirstChild("Head")
+                local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                
+                if onScreen then
+                    local greenValue = math.clamp(255 - (distance * 2), 0, 255)
+                    local tracerColor = Color3.fromRGB(255 - greenValue, greenValue, 0)
+                    
+                    line.Color = tracerColor
+                    line.From = screenCenter
+                    line.To = Vector2.new(rootPos.X, rootPos.Y)
+                    line.Visible = true
+                    
+                    if head then
+                        local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 1.5, 0))
+                        local label = HumanoidLabels[target]
+                        if headOnScreen and label then
+                            local scale = math.clamp(16 - (distance / 10), 8, 16)
+                            label.Size = scale
+                            label.Position = Vector2.new(headPos.X, headPos.Y)
+                            label.Text = string.format("%s\n%.1f studs", target.Parent.Name, distance)
+                            label.Color = tracerColor
+                            label.OutlineColor = Color3.fromRGB(0, 0, 0)
+                            label.Visible = true
+                        else
+                            label.Visible = false
+                        end
+                    end
+                else
+                    line.Visible = false
+                    if HumanoidLabels[target] then
+                        HumanoidLabels[target].Visible = false
+                    end
+                end
+            else
+                line.Visible = false
+                if HumanoidLabels[target] then
+                    HumanoidLabels[target].Visible = false
+                end
+            end
+        else
+            RemoveTracer(target, false)
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if TracerEnabled then
+        CreateTracer(player, true)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    RemoveTracer(player, true)
+end)
+
+Section:NewToggle("Humanoid Tracer", "Toggles tracers for players and humanoids", function(state)
+    TracerEnabled = state
+    if state then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then
+                CreateTracer(player, true)
+            end
+        end
+        for _, humanoid in pairs(workspace:GetDescendants()) do
+            if humanoid:IsA("Humanoid") and humanoid.Parent ~= LocalPlayer.Character then
+                CreateTracer(humanoid, false)
+            end
+        end
+        RunService:BindToRenderStep("UpdateTracers", Enum.RenderPriority.Camera.Value, UpdateTracers)
+    else
+        RunService:UnbindFromRenderStep("UpdateTracers")
+        ResetTracers()
+    end
+end)
+
+Section:NewToggle("Ignore Players", "Ignores player humanoids from being traced", function(state)
+    IgnorePlayers = state
+end)
+
+Section:NewTextBox("Detection Radius", "Set the detection radius for humanoid tracing", function(txt)
+    local radius = tonumber(txt)
+    if radius then
+        DetectionRadius = math.clamp(radius, 10, 1000)
+    end
+end)
+
+-- Fix: Detect humanoids inside models dynamically
+workspace.DescendantAdded:Connect(function(descendant)
+    if descendant:IsA("Humanoid") and descendant.Parent ~= LocalPlayer.Character then
+        local character = descendant.Parent
+        task.spawn(function()
+            local rootPart = character:FindFirstChild("HumanoidRootPart") or character:WaitForChild("HumanoidRootPart", 5)
+            if rootPart then
+                CreateTracer(descendant, false)
+            end
+        end)
+    end
+end)
+
 
 local Tab = Window:NewTab("universal")
 local Section = Tab:NewSection("universal")
