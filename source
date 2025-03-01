@@ -303,7 +303,7 @@ Section:NewButton("Time Played (on server)", "Check how long you've been playing
 
 end)
 
-Section:UpdateSection("Visuals")
+local Section = Tab:NewSection("Visual")
 
 Section:NewLabel("Tracers")
 local TracerEnabled = false
