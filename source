@@ -1,40 +1,18 @@
-local player = game.Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
 
-local function distortName(str)
-    local replacements = {o = "0", O = "0", l = "i", L = "I", e = "3", E = "3", s = "5", S = "5", a = "4", A = "4"}  
-
-    local finalName = {}
-
-    for i = 1, #str do
-        local char = str:sub(i, i)
-
-        -- Replace letters with chaotic counterparts
-        if replacements[char] then
-            char = replacements[char]
-        end
-
-        table.insert(finalName, char)
-    end  -- Fixed misplaced 'end'
-
-    return table.concat(finalName)
-end
-
-
-    local displayName = distortName(player.Character.Humanoid.DisplayName)
-    local name = distortName(player.Name)
-
-local StarterGui = game.StarterGui
-
+-- Send a notification
 StarterGui:SetCore("SendNotification", {
-    Title = "Executed!"; 
-    Text = "Please wait for the GUI"; 
-    Icon = "rbxassetid://126104158730275";  
+    Title = "cool hub executed!";
+    Text = "Please wait for the GUI to load";
+    Icon = nil;  
     Duration = 5;  
-    Button1 = "OK";
-    Callback = function()
-        print("Script Hub Injected")
-    end
 })
+local plr = game.Players.LocalPlayer
+local chr = plr.Character
+local displayName = chr.Humanoid.DisplayName
+local name = plr.Name
+
+
 
 
 
@@ -47,8 +25,15 @@ if displayName == nil then
     displayName = "Display_Not_Found"
 end
 
+local color = {
+    SchemeColor = Color3.fromRGB(0,100,0),
+    Background = Color3.fromRGB(50, 125, 50),
+    Header = Color3.fromRGB(0, 5, 0),
+    TextColor = Color3.fromRGB(255, 255, 255),
+    ElementColor = Color3.fromRGB(25, 150, 25)
+}
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Hello, ["..displayName.." | @"..name.."] | 1.1.4", "Serpent")
+local Window = Library.CreateLib("Hello, [ "..displayName.." | @"..name.." ] | 1.2.0", color)
 
 local Tab = Window:NewTab("Built-in")
 local Section = Tab:NewSection("cool stuff here")
@@ -127,11 +112,11 @@ if player.Character then
     onCharacterAdded(player.Character)
 end
 
-Section:NewTextBox("Tweak Strength", "Set how much the player tilts", function(txt)
+Section:NewTextBox("Shake Strength", "Set how much the player tilts", function(txt)
     tweakpower = tonumber(txt) or tweakpower  
 end)
 
-Section:NewTextBox("Tweak Speed", "Set how fast it happens (lower is faster!!)", function(txt)
+Section:NewTextBox("Shake Speed", "Set how fast it happens (lower is faster!!)", function(txt)
     tweakspeed = tonumber(txt) or tweakspeed  
 end)
 
@@ -143,7 +128,7 @@ Section:NewToggle("Paralyzed", "Make player Paralyzed while tweaking", function(
     end
 end)
 
-Section:NewToggle("Tweaking", "Are you okay?", function(state)
+Section:NewToggle("Shaking", "Are you okay?", function(state)
     isRotating = state  
 
     if humanoid and isPlatformStand then
@@ -199,14 +184,16 @@ local rootPart = character:FindFirstChild("HumanoidRootPart")
 
 local isLagging = false  
 local lagIntensity = 5  
-local lastPosition = nil  
+local savedPosition = rootPart and rootPart.CFrame or nil  
 
 -- Function to update character references on respawn
 local function updateCharacter(newCharacter)
     character = newCharacter
     humanoid = character:FindFirstChildOfClass("Humanoid")
     rootPart = character:FindFirstChild("HumanoidRootPart")
-    lastPosition = rootPart.Position  -- Reset position tracking
+    if rootPart then
+        savedPosition = rootPart.CFrame  -- Store position upon respawn
+    end
 end
 
 player.CharacterAdded:Connect(updateCharacter)
@@ -231,40 +218,36 @@ Section:NewToggle("Fake Lag", "Simulates extreme choppy lag", function(state)
                     local freezeTime = math.random(0.05, 0.3) * lagIntensity  
                     local unfreezeTime = math.random(0.03, 0.15) * (11 - lagIntensity)
 
-                    -- **Check if Player Has Moved Even Slightly**
-                    local currentPosition = rootPart.Position
-                    if lastPosition and (currentPosition - lastPosition).Magnitude > 0.2 then  -- Detect even small movements
-                        if math.random() < 0.1 then  -- 10% chance to teleport
-                            local safeOffset = Vector3.new(
-                                math.random(-1, 1),  
-                                math.random(0, 0),  
-                                math.random(-1, 1)  
-                            )
-                            rootPart.CFrame = rootPart.CFrame + safeOffset
-                        end
-                    end
-                    lastPosition = rootPart.Position  
+                    -- **Save Position & Wait Before Teleporting**
+                    savedPosition = rootPart.CFrame  
+                    task.wait(math.random(0, 0.3))  -- Wait between 0–0.3 sec
+                    rootPart.CFrame = savedPosition  
 
-                    -- Simulate random lag spikes
+                    -- **Simulate Lag Spikes**
                     if math.random() < freezeChance then
                         rootPart.Anchored = true  
                         task.wait(freezeTime)  
                         rootPart.Anchored = false  
                     else
-                        humanoid.WalkSpeed = math.random(3, 20)  
+                        humanoid.WalkSpeed = math.random(8, 18)  
                     end
 
-                    task.wait(unfreezeTime)  
+                    task.wait(unfreezeTime)
                 end
             end
         end)
     else
+        -- Restore normal movement when toggled off
         if humanoid and rootPart then
             humanoid.WalkSpeed = 16  
             rootPart.Anchored = false  
+            if savedPosition then
+                rootPart.CFrame = savedPosition  -- Restore position for smooth movement
+            end
         end
     end
 end)
+
 
 local Section = Tab:NewSection("Misc")
 
@@ -277,12 +260,12 @@ Section:NewTextBox("Lua Executor", "can execute your scripts", function(txt)
         StarterGui:SetCore("SendNotification", {
             Title = "Execution Error"; 
             Text = err;  -- Avoid long error messages
-            Icon = "rbxassetid://126104158730275";  
+            Icon = nil;  
             Duration = 5;  
             Button1 = "OK";
         })
         
-        warn("Execution Error: " .. err)  -- Print full error in console
+        warn("[cool hub script] Execution Error: " .. err)  -- Print full error in console
     end
 end)  -- << Closing parenthesis was missing here!
 
@@ -302,7 +285,7 @@ end)
 local StarterGui = game:GetService("StarterGui")
 local player = game.Players.LocalPlayer
 
-Section:NewButton("Time Elapsed", "Check how long you've been playing", function()
+Section:NewButton("Time Played (on server)", "Check how long you've been playing", function()
     local elapsedTime = game.workspace.DistributedGameTime
 
     local hours = math.floor(elapsedTime / 3600)  -- 3600 seconds in an hour
@@ -312,13 +295,13 @@ Section:NewButton("Time Elapsed", "Check how long you've been playing", function
     local timedata = string.format("%d hours, %d minutes, %d seconds", hours, minutes, seconds)
 
     StarterGui:SetCore("SendNotification", {
-        Title = "Time Elapsed"; 
-        Text = timedata; 
-        Duration = 10;  
-        Button1 = "OK";
+    Title = "Time played"; 
+    Text = hours.." Hours | "..minutes.." Minutes | "..seconds.." Seconds"; 
+    Icon = nil;  
+    Duration = 5;  
     })
-end)
 
+end)
 
 
 local Tab = Window:NewTab("universal")
