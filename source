@@ -866,3 +866,13 @@ Section:NewButton("lumber tycoon 2", "chop sell buy", function() loadstring(game
     Button1 = "OK";
     })
 end)
+
+Section:NewButton("King Legacy", "nil", function() loadstring(game:HttpGet("https://rawscripts.net/raw/(UPDATE-7)-King-Legacy-Storyshift-scriptd-not-owned-by-me-21546"))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "arc hub(king legacy) was Injected/Executed"; 
+    Icon = img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
