@@ -791,6 +791,15 @@ Section:NewButton("lalol backdoor", "lalol lalol", function() loadstring(game:Ht
     })
 end)
 
+Section:NewButton("fe r6 animation", "nil", function() loadstring(game:HttpGet('https://raw.githubusercontent.com/redxs-dosx/R6-Anim-Hub/refs/heads/main/Hub%20Script%20(.lua)'))()
+    StarterGui:SetCore("SendNotification", {
+    Title = "Executed!"; 
+    Text = "fe r6 animation was Injected/Executed"; 
+    Icon =  img;  
+    Duration = 5;  
+    Button1 = "OK";
+    })
+end)
 
 local Tab = Window:NewTab("Main")
 local Section = Tab:NewSection("                With Key")
