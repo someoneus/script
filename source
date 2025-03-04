@@ -740,6 +740,7 @@ Section:NewButton("project cmdbar", ";radio", function() loadstring(game:HttpGet
 end)
 
 Section:NewButton("free gamepass (not work on all game)", "nil", function() loadstring(game:HttpGet(('https://raw.githubusercontent.com/BaconBossScript/Crazy/main/Crazy'),true))()
+    StarterGui:SetCore("SendNotification", {
     Title = "Executed!"; 
     Text = "free gamepass was Injected/Executed"; 
     Icon = img;  
